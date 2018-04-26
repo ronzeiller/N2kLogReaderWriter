@@ -107,7 +107,7 @@ void setup() {
     errorHalt("Logfile does not exist");
   }
 
-  NMEA2000.SetMode(tNMEA2000::N2km_NodeOnly,23);
+  NMEA2000.SetMode(tNMEA2000::N2km_NodeOnly);
   //NMEA2000.SetMode(tNMEA2000::N2km_ListenAndSend);
   NMEA2000.SetN2kCANMsgBufSize(8);
   NMEA2000.SetN2kCANSendFrameBufSize(150);
@@ -118,33 +118,38 @@ void setup() {
   //NMEA2000.ExtendTransmitMessages(TransmitMessages);
   NMEA2000.Open();
 
-
+  /*
   if (logFile.fgets(line, sizeof(line)) < 0) {
     errorHalt("Line not found");
   } else {
     Serial.printf("Begin\n");
     Serial.printf("Logfile 1st line: %s\n", line);
   }
+  */
 
 }
 
 void loop() {
 
   if (incomingByte == 0) incomingByte = Serial.read();
-  switch (incomingByte) {
-    case 'P':
-      if (mode == 0) { // Pause -> switch to play
-        Serial.println("Switch to Play Mode");
-      }
-      if (mode == 1) { // Play -> switch to pause
-        Serial.println("Switch to Pause Mode");
-      }
-    break;
-  case 'L':
-    // put to pause mode
-    mode = 0;
-    // wait for entering line number
-    Serial.println("Enter line number to start logfile");
+
+  if (incomingByte != 0){
+    switch (incomingByte) {
+      case 'P':
+        if (mode == 0) { // Pause -> switch to play
+          Serial.println("Switch to Play Mode");
+          mode = 1;
+        }
+        if (mode == 1) { // Play -> switch to pause
+          Serial.println("Switch to Pause Mode");
+          mode = 0;
+        }
+      break;
+    case 'L':
+      // put to pause mode
+      mode = 0;
+      // wait for entering line number
+      Serial.println("Enter line number to start logfile");
 
     break;
     default:
@@ -153,43 +158,44 @@ void loop() {
         Serial.printf("Go to line number %d and start playing\n", incomingByte);
         delay(1000);
       }
+    }
     incomingByte = 0;
   }
-  n = 0;
-  while ((er = logFile.fgets(line, sizeof(line))) > 0) {
-    incomingByte = Serial.read();
-    if (incomingByte != 0) break;
-    n++;
-    if (SailmaxToN2k(line, timeNext, msg)){
-      if (n == 1) {
-        delayTime = 0;
-        delta     = millis() - timeNext;  // difference millis to timestamp from 1st sentence in logFile
-      } else {
-        // delayTime = timeNext - timeSent - 10; // just take const 10ms for reading?
-        // or try to make delay more dependent to N2k timestamps
-        delayTime = timeNext - timeSent + (delta - millis() + timeNext) - 40;
-        //Serial.printf("Line: %d Differenz: %d, Delay: %d\n", n, millis() - timeNext, delayTime);
-        if (delayTime > 0) delay(delayTime);
-      }
-      Serial.printf("%d : ", n);
-      bool result = NMEA2000.SendMsg(msg);
-      UpdateLedState();
-      //if (result) {
-        //Serial.printf("%d: PGN sent: %d", timeNext, msg.PGN);
-      //}
 
-      LedOn(LedOnTime);
-      timeSent = timeNext;
+  if (mode == 1) {
+    while ((er = logFile.fgets(line, sizeof(line))) > 0) {
+      incomingByte = Serial.read();
+      if (incomingByte != 0) break;
+      n++;
+      if (SailmaxToN2k(line, timeNext, msg)){
+        if (n == 1) {
+          delayTime = 0;
+          delta     = millis() - timeNext;  // difference millis to timestamp from 1st sentence in logFile
+        } else {
+          // delayTime = timeNext - timeSent - 10; // just take const 10ms for reading?
+          // or try to make delay more dependent to N2k timestamps
+          delayTime = timeNext - timeSent + (delta - millis() + timeNext) - 40;
+          //Serial.printf("Line: %d Differenz: %d, Delay: %d\n", n, millis() - timeNext, delayTime);
+          if (delayTime > 0) delay(delayTime);
+        }
+        Serial.printf("%d : ", n);
+        NMEA2000.SendMsg(msg);
+        UpdateLedState();
+        //if (result) {
+          //Serial.printf("%d: PGN sent: %d", timeNext, msg.PGN);
+        //}
+
+        timeSent = timeNext;
+      } else {
+        Serial.printf("Could not convert line %d\n",n);
+      }
+    }
+    if (n <= 1) {
+      Serial.printf("Could not read LogFile\n");
     } else {
-      Serial.printf("Could not convert line %d\n",n);
+      Serial.printf("End of LogFile\n");
     }
   }
-  if (n <= 1) {
-    Serial.printf("Could not read LogFile\n");
-  } else {
-    Serial.printf("End of LogFile\n");
-  }
-
 }
 
 
