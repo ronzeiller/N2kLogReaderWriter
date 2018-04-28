@@ -52,16 +52,6 @@ void errorHalt(const char* msg);
 void readAndSendMsg();
 void testReadFile();
 
-// Code below is just for handling led blinking.
-#define LedOnTime 2
-#define LedBlinkTime 1000
-unsigned long TurnLedOffTime=0;
-unsigned long TurnLedOnTime=millis()+LedBlinkTime;
-
-// Forward declarations for led blinking
-void LedOn(unsigned long OnTime);
-void UpdateLedState();
-
 static SdFatSdio sd;
 SdFile logFile;
 
@@ -79,7 +69,6 @@ int64_t delta     = 0;
 
 uint64_t lineNumber = 0;
 int8_t mode = 1;
-int incomingByte = 0;   // for incoming serial data
 
 void setup() {
   Serial.begin(115200);
@@ -91,7 +80,6 @@ void setup() {
   Serial.println(" ******************************************************************");
   Serial.println(" *    Sailmax-CU, N2k Log Reader-Writer, © Ronnie Zeiller, 2018   *");
   Serial.println(" ******************************************************************");
-  Serial.println("      NOTE: To go to specific line number in logfile enter 'L' ");
   Serial.println();
   delay(1000);
 
@@ -118,85 +106,34 @@ void setup() {
   //NMEA2000.ExtendTransmitMessages(TransmitMessages);
   NMEA2000.Open();
 
-  /*
-  if (logFile.fgets(line, sizeof(line)) < 0) {
-    errorHalt("Line not found");
-  } else {
-    Serial.printf("Begin\n");
-    Serial.printf("Logfile 1st line: %s\n", line);
-  }
-  */
-
-}
-
-void loop() {
-
-  if (incomingByte == 0) incomingByte = Serial.read();
-
-  if (incomingByte != 0){
-    switch (incomingByte) {
-      case 'P':
-        if (mode == 0) { // Pause -> switch to play
-          Serial.println("Switch to Play Mode");
-          mode = 1;
-        }
-        if (mode == 1) { // Play -> switch to pause
-          Serial.println("Switch to Pause Mode");
-          mode = 0;
-        }
-      break;
-    case 'L':
-      // put to pause mode
-      mode = 0;
-      // wait for entering line number
-      Serial.println("Enter line number to start logfile");
-
-    break;
-    default:
-      // if pause mode and input is a number, go to line number and start play
-      if (mode == 0) {
-        Serial.printf("Go to line number %d and start playing\n", incomingByte);
-        delay(1000);
-      }
-    }
-    incomingByte = 0;
-  }
-
-  if (mode == 1) {
-    while ((er = logFile.fgets(line, sizeof(line))) > 0) {
-      incomingByte = Serial.read();
-      if (incomingByte != 0) break;
-      n++;
-      if (SailmaxToN2k(line, timeNext, msg)){
-        if (n == 1) {
-          delayTime = 0;
-          delta     = millis() - timeNext;  // difference millis to timestamp from 1st sentence in logFile
-        } else {
-          // delayTime = timeNext - timeSent - 10; // just take const 10ms for reading?
-          // or try to make delay more dependent to N2k timestamps
-          delayTime = timeNext - timeSent + (delta - millis() + timeNext) - 40;
-          //Serial.printf("Line: %d Differenz: %d, Delay: %d\n", n, millis() - timeNext, delayTime);
-          if (delayTime > 0) delay(delayTime);
-        }
-        Serial.printf("%d : ", n);
-        NMEA2000.SendMsg(msg);
-        UpdateLedState();
-        //if (result) {
-          //Serial.printf("%d: PGN sent: %d", timeNext, msg.PGN);
-        //}
-
-        timeSent = timeNext;
+  while ((er = logFile.fgets(line, sizeof(line))) > 0) {
+    n++;
+    if (SailmaxToN2k(line, timeNext, msg)){
+      if (n == 1) {
+        delayTime = 0;
+        delta     = millis() - timeNext;  // difference millis to timestamp from 1st sentence in logFile
       } else {
-        Serial.printf("Could not convert line %d\n",n);
+        delayTime = timeNext - timeSent + (delta - millis() + timeNext) - 40;
+        //Serial.printf("Line: %d Differenz: %d, Delay: %d\n", n, millis() - timeNext, delayTime);
+        if (delayTime > 0) delay(delayTime);
       }
-    }
-    if (n <= 1) {
-      Serial.printf("Could not read LogFile\n");
+      Serial.printf("%d : ", n);
+      NMEA2000.SendMsg(msg);
+
+      timeSent = timeNext;
     } else {
-      Serial.printf("End of LogFile\n");
+      Serial.printf("Could not convert line %d\n",n);
     }
   }
+  if (n <= 1) {
+    Serial.printf("Could not read LogFile\n");
+  } else {
+    Serial.printf("End of LogFile\n");
+  }
+
 }
+
+void loop() {}
 
 
 bool sdCardInit() {
@@ -223,22 +160,4 @@ bool sdCardInit() {
 //-----------------------------------------------------------------------------
 void errorHalt(const char* msg) {
   sd.errorHalt(msg);
-}
-
-//*****************************************************************************
-void LedOn(unsigned long OnTime) {
-  digitalWrite(LED_BUILTIN, HIGH);
-  TurnLedOffTime=millis()+OnTime;
-  TurnLedOnTime=0;
-}
-
-//*****************************************************************************
-void UpdateLedState() {
-  if ( TurnLedOffTime>0 && TurnLedOffTime<millis() ) {
-    digitalWrite(LED_BUILTIN, LOW);
-    TurnLedOffTime=0;
-    TurnLedOnTime=millis()+LedBlinkTime;
-  }
-
-  if ( TurnLedOnTime>0 && TurnLedOnTime<millis() ) LedOn(LedBlinkTime);
 }
