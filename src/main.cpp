@@ -118,7 +118,7 @@ void setup() {
         if (delayTime > 0) delay(delayTime);
       }
       Serial.printf("%d : ", n);
-      NMEA2000.SendMsg(msg);
+      NMEA2000.SendMsg(msg, -1);
 
       timeSent = timeNext;
     } else {

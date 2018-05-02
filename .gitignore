@@ -43,5 +43,7 @@ CMakeListsPrivate.txt
 # CLion
 cmake-build-debug
 
-# individual user's config file
-# extras/config/kbox-config.json
+# logfiles
+logfiles/RPC2018_xad.log.zip
+logfiles/Sailmax0.log
+logfiles/Sailmax_test_prodInfo.log
