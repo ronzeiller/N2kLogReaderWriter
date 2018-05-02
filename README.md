@@ -6,6 +6,8 @@ Timestamps in log file are taken for real time simulation.
 ## Log fie format
 similar to Seasmart $PCDIN sentences but with timestamp and PGN in decimals for better human reading.
 
+Conversion into and from tN2k.msg in https://github.com/ronzeiller/N2kLogReaderWriter/tree/master/lib/SailmaxFormat/src
+
 (Logged with a modified version of KBox V0)
 
 timestamp, PGN, Source, Data, checksum

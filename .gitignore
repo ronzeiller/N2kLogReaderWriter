@@ -1,3 +1,4 @@
+logfiles/* linguist-vendored
 .pioenvs
 .piolibdeps
 .clang_complete
