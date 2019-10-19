@@ -1,4 +1,52 @@
-.pio
+logfiles/* linguist-vendored
+.pioenvs
+.piolibdeps
+.pio/
 .clang_complete
 .gcc-flags.json
+.sconsign.dblite
+*.dSYM
+*.pyc
+*.d
+tags
+.gdb_history
+lcov-output
+cov.info
+node_modules
+
+# OSX
+# =========================
+
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Netbeans project folder
+nbproject
+
+# Platformio likes to auto-create this
+lib/readme.txt
+CMakeListsPrivate.txt
+
+# CLion
+cmake-build-debug
+
+# logfiles
+logfiles/
+logfiles/RPC2018_xad.log.zip
+logfiles/Sailmax0.log
+logfiles/Sailmax_test_prodInfo.log
