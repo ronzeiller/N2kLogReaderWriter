@@ -6,7 +6,7 @@
           S   AAAAAAA  I L      M    M   AAAAAAA     X X
       SSS    A       A I LLLLL  M    M  A       A   X   X
 
-      * Project:  Sailmax-CU, N2k Log Reader-Writer
+      * Project:  Sailmax-CU, N2k Sailmax-Log Reader-Writer
       * Purpose:  reading propriatary Sailmax log format from SD-Card,
       *           writing to NMEA2000 bus for Teensy 3.6
       * Author:   © Ronnie Zeiller, 2018
